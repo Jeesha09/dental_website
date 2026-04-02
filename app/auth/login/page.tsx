@@ -41,6 +41,13 @@ export default function LoginPage() {
 
       if (error) {
         console.error('Login error:', error);
+        const normalizedMessage = error.message.toLowerCase();
+        if (normalizedMessage.includes('invalid login credentials')) {
+          throw new Error('Invalid email or password. If you just registered, verify your email first.');
+        }
+        if (normalizedMessage.includes('email not confirmed')) {
+          throw new Error('Please verify your email before signing in.');
+        }
         throw new Error(error.message);
       }
 

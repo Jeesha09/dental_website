@@ -57,6 +57,11 @@ export default function RegisterPage() {
         throw new Error('Failed to create user');
       }
 
+      // Supabase returns an empty identities array when the user already exists.
+      if (authData.user.identities && authData.user.identities.length === 0) {
+        throw new Error('An account with this email already exists. Please sign in instead.');
+      }
+
       // Profile creation happens on first successful login to avoid RLS/session edge cases.
       if (!authData.session) {
         toast.success('Account created. Please verify your email, then sign in.');
