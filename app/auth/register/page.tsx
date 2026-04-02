@@ -36,18 +36,6 @@ export default function RegisterPage() {
     try {
       const supabase = createSupabaseClient();
 
-      // Check if user already exists
-      const { data: existingUser } = await supabase
-        .from('users')
-        .select('email')
-        .eq('email', formData.email)
-        .single();
-
-      if (existingUser) {
-        throw new Error('An account with this email already exists. Please log in instead.');
-      }
-
-      // Sign up with Supabase
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -69,10 +57,8 @@ export default function RegisterPage() {
         throw new Error('Failed to create user');
       }
 
-      // Create user profile
-      const { error: profileError } = await supabase
-        .from('users')
-        .upsert({
+      const { error: profileError } = await supabase.from('users').upsert(
+        {
           id: authData.user.id,
           email: formData.email,
           first_name: formData.firstName,
@@ -80,9 +66,11 @@ export default function RegisterPage() {
           phone: formData.phone || null,
           role: 'parent',
           language_preference: 'en',
-        }, {
-          onConflict: 'id'
-        });
+        },
+        {
+          onConflict: 'id',
+        }
+      );
 
       if (profileError) {
         console.error('Profile error:', profileError);

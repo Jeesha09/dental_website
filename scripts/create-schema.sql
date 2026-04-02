@@ -1,11 +1,13 @@
 -- CleftConnect Database Schema
 -- Comprehensive multi-table schema for cleft lip and palate care management
 
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- ===== USERS & AUTHENTICATION =====
 
 -- Users table (parents/guardians)
 CREATE TABLE IF NOT EXISTS users (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email VARCHAR(255) UNIQUE NOT NULL,
   phone VARCHAR(20),
   first_name VARCHAR(100),
@@ -21,7 +23,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- Children table
 CREATE TABLE IF NOT EXISTS children (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   parent_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   name VARCHAR(100) NOT NULL,
   date_of_birth DATE NOT NULL,
@@ -40,7 +42,7 @@ CREATE TABLE IF NOT EXISTS children (
 
 -- Milestones table
 CREATE TABLE IF NOT EXISTS milestones (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
   milestone_type VARCHAR(100), -- 'lip-repair', 'palate-repair', 'speech-assessment', 'bone-graft', 'orthodontics'
   scheduled_age_months INT,
@@ -59,7 +61,7 @@ CREATE TABLE IF NOT EXISTS milestones (
 
 -- Milestone reminders
 CREATE TABLE IF NOT EXISTS milestone_reminders (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   milestone_id UUID NOT NULL REFERENCES milestones(id) ON DELETE CASCADE,
   reminder_date DATE,
   reminder_type VARCHAR(50), -- 'email', 'sms', 'app'
@@ -71,7 +73,7 @@ CREATE TABLE IF NOT EXISTS milestone_reminders (
 
 -- Speech records (Speak & Shine data)
 CREATE TABLE IF NOT EXISTS speech_records (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
   recording_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   audio_url VARCHAR(500),
@@ -86,7 +88,7 @@ CREATE TABLE IF NOT EXISTS speech_records (
 
 -- Speech game sessions (Speak & Shine gameplay)
 CREATE TABLE IF NOT EXISTS speech_game_sessions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
   session_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   words_attempted INT,
@@ -101,7 +103,7 @@ CREATE TABLE IF NOT EXISTS speech_game_sessions (
 
 -- Feeding records
 CREATE TABLE IF NOT EXISTS feeding_records (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
   video_url VARCHAR(500),
   upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -119,7 +121,7 @@ CREATE TABLE IF NOT EXISTS feeding_records (
 
 -- Growth tracking (facial symmetry, development)
 CREATE TABLE IF NOT EXISTS growth_records (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
   photo_url VARCHAR(500),
   photo_date DATE,
@@ -136,7 +138,7 @@ CREATE TABLE IF NOT EXISTS growth_records (
 
 -- Doctors
 CREATE TABLE IF NOT EXISTS doctors (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID UNIQUE REFERENCES users(id),
   specialization VARCHAR(100), -- 'cleft-surgeon', 'orthodontist', 'speech-therapist', 'anesthesiologist'
   license_number VARCHAR(100),
@@ -150,7 +152,7 @@ CREATE TABLE IF NOT EXISTS doctors (
 
 -- Hospitals
 CREATE TABLE IF NOT EXISTS hospitals (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(255) NOT NULL,
   address TEXT,
   city VARCHAR(100),
@@ -167,7 +169,7 @@ CREATE TABLE IF NOT EXISTS hospitals (
 
 -- NGO Organizations
 CREATE TABLE IF NOT EXISTS ngo_organizations (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(255) NOT NULL,
   description TEXT,
   address TEXT,
@@ -185,7 +187,7 @@ CREATE TABLE IF NOT EXISTS ngo_organizations (
 
 -- Registry entries (anonymized)
 CREATE TABLE IF NOT EXISTS registry_entries (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   child_id UUID UNIQUE REFERENCES children(id),
   cleft_classification VARCHAR(100),
   incidence_region VARCHAR(100),
@@ -206,7 +208,7 @@ CREATE TABLE IF NOT EXISTS registry_entries (
 
 -- Achievements/Badges
 CREATE TABLE IF NOT EXISTS achievements (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
   achievement_type VARCHAR(100), -- 'speech-milestone', 'therapy-streak', 'brushing-habit', 'attendance'
   badge_name VARCHAR(100),
@@ -217,7 +219,7 @@ CREATE TABLE IF NOT EXISTS achievements (
 
 -- Smile Garden (virtual garden/flowers)
 CREATE TABLE IF NOT EXISTS smile_garden (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   child_id UUID NOT NULL UNIQUE REFERENCES children(id) ON DELETE CASCADE,
   total_flowers INT DEFAULT 0,
   total_stars INT DEFAULT 0,
@@ -231,7 +233,7 @@ CREATE TABLE IF NOT EXISTS smile_garden (
 
 -- Daily rewards log
 CREATE TABLE IF NOT EXISTS daily_rewards (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   child_id UUID NOT NULL REFERENCES children(id) ON DELETE CASCADE,
   reward_date DATE DEFAULT CURRENT_DATE,
   reward_type VARCHAR(100), -- 'therapy-completion', 'speech-practice', 'brushing', 'milestone-reached'
@@ -244,7 +246,7 @@ CREATE TABLE IF NOT EXISTS daily_rewards (
 
 -- FAQ/Resources
 CREATE TABLE IF NOT EXISTS resources (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   category VARCHAR(100), -- 'faq', 'financial-aid', 'emotional-support', 'government-schemes'
   title VARCHAR(255),
   content TEXT,
@@ -256,7 +258,7 @@ CREATE TABLE IF NOT EXISTS resources (
 
 -- Testimonials
 CREATE TABLE IF NOT EXISTS testimonials (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   parent_id UUID REFERENCES users(id),
   child_name_display VARCHAR(100),
   content TEXT,
@@ -267,7 +269,7 @@ CREATE TABLE IF NOT EXISTS testimonials (
 
 -- Parent consents (HIPAA-style compliance)
 CREATE TABLE IF NOT EXISTS parent_consents (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   parent_id UUID NOT NULL REFERENCES users(id),
   child_id UUID NOT NULL REFERENCES children(id),
   data_sharing_research BOOLEAN DEFAULT FALSE,
@@ -280,7 +282,7 @@ CREATE TABLE IF NOT EXISTS parent_consents (
 
 -- Notifications
 CREATE TABLE IF NOT EXISTS notifications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   title VARCHAR(255),
   message TEXT,
@@ -326,6 +328,9 @@ ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "users_select_own" ON users 
   FOR SELECT USING (auth.uid()::text = id::text);
 
+CREATE POLICY "users_insert_own" ON users 
+  FOR INSERT WITH CHECK (auth.uid()::text = id::text);
+
 CREATE POLICY "users_update_own" ON users 
   FOR UPDATE USING (auth.uid()::text = id::text);
 
@@ -343,6 +348,9 @@ CREATE POLICY "children_update_own" ON children
 CREATE POLICY "milestones_select_own" ON milestones
   FOR SELECT USING (child_id IN (SELECT id FROM children WHERE parent_id = auth.uid()));
 
+CREATE POLICY "milestones_insert_own" ON milestones
+  FOR INSERT WITH CHECK (child_id IN (SELECT id FROM children WHERE parent_id = auth.uid()));
+
 CREATE POLICY "speech_records_select_own" ON speech_records
   FOR SELECT USING (child_id IN (SELECT id FROM children WHERE parent_id = auth.uid()));
 
@@ -358,6 +366,12 @@ CREATE POLICY "achievements_select_own" ON achievements
 -- RLS Policy: Can only see own garden
 CREATE POLICY "smile_garden_select_own" ON smile_garden
   FOR SELECT USING (child_id IN (SELECT id FROM children WHERE parent_id = auth.uid()));
+
+CREATE POLICY "smile_garden_insert_own" ON smile_garden
+  FOR INSERT WITH CHECK (child_id IN (SELECT id FROM children WHERE parent_id = auth.uid()));
+
+CREATE POLICY "registry_entries_insert_own" ON registry_entries
+  FOR INSERT WITH CHECK (child_id IN (SELECT id FROM children WHERE parent_id = auth.uid()));
 
 -- RLS Policy: Can see own notifications
 CREATE POLICY "notifications_select_own" ON notifications

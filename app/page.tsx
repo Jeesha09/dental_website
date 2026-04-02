@@ -56,20 +56,16 @@ export default function Home() {
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 mb-12">
-                <Link href="/auth/register">
-                  <Button size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white rounded-full">
+                <Button asChild size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white rounded-full">
+                  <Link href="/auth/register">
                     Register a Child
-                  </Button>
-                </Link>
-                <Link href="/journey">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="w-full sm:w-auto border-2 border-secondary text-secondary hover:bg-secondary/5 rounded-full"
-                  >
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="w-full sm:w-auto border-2 border-secondary text-secondary hover:bg-secondary/5 rounded-full">
+                  <Link href="/journey">
                     Explore Care Journey
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </div>
 
               {/* Trust Indicators */}
@@ -178,16 +174,16 @@ export default function Home() {
               Join thousands of families already connected to expert care
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/auth/register">
-                <Button size="lg" className="bg-primary hover:bg-primary/90 text-white rounded-full">
+              <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-white rounded-full">
+                <Link href="/auth/register">
                   Register Your Child
-                </Button>
-              </Link>
-              <Link href="/contact">
-                <Button size="lg" variant="outline" className="border-2 border-primary text-primary rounded-full">
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="border-2 border-primary text-primary rounded-full">
+                <Link href="/contact">
                   Contact Us
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           </motion.div>
         </div>

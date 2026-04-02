@@ -22,7 +22,6 @@ export default function RegisterChildPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     childName: '',
     dateOfBirth: '',
@@ -42,8 +41,6 @@ export default function RegisterChildPage() {
         router.push('/auth/login');
         return;
       }
-      
-      setUserId(session.user.id);
     };
     
     checkUser();
@@ -86,28 +83,125 @@ export default function RegisterChildPage() {
     }
 
     if (step === 3) {
-      if (!userId) {
-        toast.error('Please log in first');
-        router.push('/auth/login');
-        return;
-      }
-      
       setIsLoading(true);
       try {
-        const response = await fetch('/api/children/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ...formData,
-            parentId: userId,
-          }),
-        });
+        const supabase = createSupabaseClient();
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
 
-        const data = await response.json();
+        if (sessionError || !session?.access_token) {
+          throw new Error('Your login session expired. Please sign in again.');
+        }
 
-        if (!response.ok) {
-          console.error('Child registration failed:', data);
-          throw new Error(data.message || 'Registration failed');
+        const userId = session.user.id;
+
+        const { data: child, error: childError } = await supabase
+          .from('children')
+          .insert({
+            parent_id: userId,
+            name: formData.childName,
+            date_of_birth: formData.dateOfBirth,
+            gender: formData.gender || null,
+            cleft_type: formData.cleftType,
+            cleft_side: formData.cleftSide,
+            location: formData.location || null,
+            status: 'active',
+          })
+          .select()
+          .single();
+
+        if (childError) {
+          console.error('Child insert error:', childError);
+          throw new Error(childError.message);
+        }
+
+        const { error: registryError } = await supabase
+          .from('registry_entries')
+          .insert({
+            child_id: child.id,
+            cleft_classification: formData.cleftType,
+            incidence_region: formData.location || null,
+          });
+
+        if (registryError) {
+          console.error('Registry creation error:', registryError);
+        }
+
+        const { error: gardenError } = await supabase
+          .from('smile_garden')
+          .insert({
+            child_id: child.id,
+          });
+
+        if (gardenError) {
+          console.error('Smile Garden creation error:', gardenError);
+        }
+
+        const birthDate = new Date(formData.dateOfBirth);
+        const ageMonths = Math.floor(
+          (new Date().getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24 * 30)
+        );
+
+        const milestones = [
+          {
+            milestone_type: 'lip_repair',
+            scheduled_age_months: 3,
+            purpose: 'Primary lip repair surgery',
+            expected_outcomes: 'Improved appearance and feeding',
+            preparation_tips: 'Ensure proper nutrition and health before surgery',
+          },
+          {
+            milestone_type: 'palate_repair',
+            scheduled_age_months: 12,
+            purpose: 'Primary palate repair surgery',
+            expected_outcomes: 'Better speech and swallowing',
+            preparation_tips: 'Speech therapy may begin after healing',
+          },
+          {
+            milestone_type: 'speech_assessment',
+            scheduled_age_months: 60,
+            purpose: 'Comprehensive speech evaluation',
+            expected_outcomes: 'Identify speech therapy needs',
+            preparation_tips: 'Speech therapy may continue for years',
+          },
+          {
+            milestone_type: 'alveolar_bone_graft',
+            scheduled_age_months: 96,
+            purpose: 'Bone grafting for alveolar ridge',
+            expected_outcomes: 'Better dental development',
+            preparation_tips: 'Orthodontics may follow',
+          },
+          {
+            milestone_type: 'orthodontics',
+            scheduled_age_months: 120,
+            purpose: 'Orthodontic evaluation and treatment',
+            expected_outcomes: 'Proper tooth alignment',
+            preparation_tips: 'Long-term commitment to treatment',
+          },
+        ];
+
+        for (const milestone of milestones) {
+          const scheduledDate = new Date(birthDate);
+          scheduledDate.setMonth(scheduledDate.getMonth() + milestone.scheduled_age_months);
+
+          const { error: milestoneError } = await supabase
+            .from('milestones')
+            .insert({
+              child_id: child.id,
+              milestone_type: milestone.milestone_type,
+              scheduled_age_months: milestone.scheduled_age_months,
+              scheduled_date: scheduledDate.toISOString().split('T')[0],
+              purpose: milestone.purpose,
+              expected_outcomes: milestone.expected_outcomes,
+              preparation_tips: milestone.preparation_tips,
+              status: ageMonths >= milestone.scheduled_age_months ? 'due' : 'scheduled',
+            });
+
+          if (milestoneError) {
+            console.error('Milestone creation error:', milestoneError);
+          }
         }
 
         toast.success('Child registered successfully!');

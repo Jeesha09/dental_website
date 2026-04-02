@@ -296,11 +296,11 @@ export default function CommunityPage() {
             Join thousands of families already using CleftConnect for comprehensive care management
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/auth/register">
-              <Button className="bg-primary hover:bg-primary/90 text-white rounded-lg">
+            <Button asChild className="bg-primary hover:bg-primary/90 text-white rounded-lg">
+              <Link href="/auth/register">
                 Register Your Child
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             <Button variant="outline" className="border-primary text-primary rounded-lg">
               Learn More
             </Button>
