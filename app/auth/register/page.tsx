@@ -57,8 +57,7 @@ export default function RegisterPage() {
         throw new Error('Failed to create user');
       }
 
-      // If email confirmation is enabled, Supabase may return no session here.
-      // In that case, profile creation must happen after login.
+      // Profile creation happens on first successful login to avoid RLS/session edge cases.
       if (!authData.session) {
         toast.success('Account created. Please verify your email, then sign in.');
         setTimeout(() => {
@@ -67,30 +66,10 @@ export default function RegisterPage() {
         return;
       }
 
-      const { error: profileError } = await supabase.from('users').upsert(
-        {
-          id: authData.user.id,
-          email: formData.email,
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          phone: formData.phone || null,
-          role: 'parent',
-          language_preference: 'en',
-        },
-        {
-          onConflict: 'id',
-        }
-      );
-
-      if (profileError) {
-        console.error('Profile error:', profileError);
-        throw new Error('Failed to create user profile: ' + profileError.message);
-      }
-
       toast.success('Account created successfully!');
       // Small delay to show the success message before redirecting
       setTimeout(() => {
-        router.push('/dashboard');
+        router.push('/auth/login');
       }, 500);
     } catch (error) {
       console.error('Registration error:', error);
