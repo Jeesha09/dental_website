@@ -48,6 +48,26 @@ export default function LoginPage() {
         throw new Error('No session created');
       }
 
+      // Ensure profile exists for users who signed up with email confirmation enabled.
+      const { error: profileError } = await supabase.from('users').upsert(
+        {
+          id: data.user.id,
+          email: data.user.email ?? '',
+          first_name: data.user.user_metadata?.first_name ?? null,
+          last_name: data.user.user_metadata?.last_name ?? null,
+          phone: data.user.user_metadata?.phone ?? null,
+          role: 'parent',
+          language_preference: 'en',
+        },
+        {
+          onConflict: 'id',
+        }
+      );
+
+      if (profileError) {
+        console.error('Profile upsert on login failed:', profileError);
+      }
+
       toast.success('Logged in successfully!');
       setTimeout(() => {
         router.push('/dashboard');
