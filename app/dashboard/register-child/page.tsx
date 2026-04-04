@@ -96,6 +96,32 @@ export default function RegisterChildPage() {
         }
 
         const userId = session.user.id;
+        const userEmail = session.user.email;
+
+        if (!userEmail) {
+          throw new Error('Missing user email in session. Please sign in again.');
+        }
+
+        // Ensure parent profile exists so children.parent_id FK can be satisfied.
+        const { error: parentUpsertError } = await supabase.from('users').upsert(
+          {
+            id: userId,
+            email: userEmail,
+            first_name: session.user.user_metadata?.first_name ?? null,
+            last_name: session.user.user_metadata?.last_name ?? null,
+            phone: session.user.user_metadata?.phone ?? null,
+            role: 'parent',
+            language_preference: 'en',
+          },
+          {
+            onConflict: 'id',
+          }
+        );
+
+        if (parentUpsertError) {
+          console.error('Parent profile upsert error:', parentUpsertError);
+          throw new Error('Failed to prepare parent profile: ' + parentUpsertError.message);
+        }
 
         const { data: child, error: childError } = await supabase
           .from('children')
